@@ -21,6 +21,7 @@ Una alerta inmediata viene dada por un registro en el momento, es decir, u senso
 ### 2. Analizar cobertura y calidad
 
 **1.Identifica dos problemas de calidad y explica sus consecuencias.**
+
 Unidades incorrectas, si los grados medidos no están en la unidad adecuada puede llevar a un problema, por ejemplo, si la temperatura es 30ºC pero el sensor lo marca en Farenheit, aparecería 86, lo cual sería demasiada temperatura si fuese en grados Celsius.
 
 Lecturas incorrectas, si tenemos un sensor que muestra la misma hora y la misma temperatura durante dos horas, el trabajo de ese sensor no está sirviendo para nada.
@@ -45,6 +46,14 @@ Tenemos valores extremos, los cuales se salen de su rango físico como es PM10 n
 
 ### 4. Elaborar una recomendación
 
-Analizando los datos recogidos en el dossier de datos de los sensores, 
+Analizando los datos recogidos en el dossier de datos de los sensores, el riesgo mas urgente está ubicado en la zona 04 Sur Industrial, donde no hay muchos sensores y la cantidad de personas que viven en ese distrito es muy alta, es decir, esto puede conllevar a un aumento de contaminación en ese distrito.
 
+Se recomienda realizar un informe histórico de los datos de los sensores, para poder identificar los datos que pueden ser problemáticos, y luego tomar medidas para prevenir que estos datos se vuelvan a generar. Si los datos son problemáticos, se pueden realizar un prohibición de vehículos que expulsen una cantidad alta de PM10 en ese distrito. Además de concienciar a las personas que viven allí para que usen el transporte público en lugar de coches.
 
+Las razones principales para la prohibición de vehículos son: 
+1. La cantidad de PM10 en ese distrito que es alta.
+2. El número de personas que residen allí.
+
+Uno de los problemas que seguiría pendiente a solucionar es la cantidad de datos que recogen los sensores de manera correcta, ya que hay sensores que han registrado datos incorrectos, como por ejemplo, el sensor de temperatura al usar unidades diferentes, o los sensores que no han transmitido datos durante 30 minutos.
+
+Para proteger la privacidad de los datos de los sensores y su ubicación, en los informes históricos que se realicen, se recomienda que no se incluya las coordenadas precisas de cada sensor, sino que se incluya el área al que pertenece y esté identificado con un código de distrito y un código de sensor. Aunque si que se recomienda añadir los datos de hora y fecha para que el informe sea lo más detallado y preciso posible, y ayude a adoptar las medidas necesarias para prevenir que los datos se vuelvan a generar.
