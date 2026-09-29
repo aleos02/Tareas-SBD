@@ -137,11 +137,13 @@ JSON de valoraciones:
   "usuario_id": {"$oid": "651a1b2c3d4e5f6a7b8c9d01"},
   "nota": 9.0,
   "comentario": "Excelente ritmo y banda sonora imponente.",
-  "estado": "VISIBLE",
+  "estado": "VISIBLE", 
   "fecha_creacion": {"$date": "2026-09-29T14:20:00Z"}
 }
 ```
 ### 3. Modelo de incrustación y de referencia.
+
+
 
 ### 4. Estrategia para identificadores, fechas, estados y campos opcionales.
 
