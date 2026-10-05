@@ -143,8 +143,208 @@ JSON de valoraciones:
 ```
 ### 3. Modelo de incrustación y de referencia.
 
+1- Variantes de películas y series (Incrustación):
+El usuario entra en la plataforma y el selector desplegable debe saber que películas y series son las opciones disponibles.
 
+2- Valoraciones (Referencia):
+Los usuarios pueden poner reseñas a muchas series y películas, por lo que no es necesario guardar todas dentro de un documento.
 
 ### 4. Estrategia para identificadores, fechas, estados y campos opcionales.
 
+Identificadores: id_usuario, id_media, id_valoraciones
+Fechas: fecha_valoracion, fecha_creacion, fecha_visualizacion
+Estados: String de "pendiente", "vista", "en proceso".
+Campos opcionales: El campo "comentario" es opcional para valoraciones.
+
 ### 5. Límites del modelo.
+
+Evitar arrays infinitos en las valoraciones a las series y películas.
+Controlar el tamaño de los campos de texto.
+
+
+## 3. Implementar Validacón e índices.
+
+### 1. Creación de colecciones con jsonSchema.
+
+1- Usuarios:
+```json
+db.createCollection("usuarios", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["id", "nombre", "email", "usuario", "contraseña", "lista_series", "lista_peliculas"],
+      properties: {
+        id: { bsonType: "string" },
+        nombre: { bsonType: "string" },
+        email: { 
+          bsonType: "string", 
+          pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" 
+        },
+        usuario: { bsonType: "string" },
+        contraseña: { bsonType: "string" },
+        lista_series: {
+          bsonType: "array",
+          items: { bsonType: "string" }
+        },
+        lista_peliculas: {
+          bsonType: "array",
+          items: { bsonType: "string" }
+        }
+      }
+    }
+  }
+});
+```
+
+2- Media:
+```json
+db.createCollection("media", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["año", "duracion", "nota_media", "sinopsis", "generos"],
+      properties: {
+        id_serie: { bsonType: ["string", "null"] },
+        id_pelicula: { bsonType: ["string", "null"] },
+        año: { bsonType: "int", minimum: 1888 },
+        duracion: { bsonType: "int", minimum: 0 },
+        nota_media: { bsonType: ["double", "decimal"], minimum: 0, maximum: 10 },
+        sinopsis: { bsonType: "string" },
+        generos: {
+          bsonType: "array",
+          minItems: 1,
+          items: { bsonType: "string" }
+        }
+      }
+    }
+  }
+});
+```
+
+3- Historial:
+```json
+db.createCollection("historial", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["id", "usuario_id", "media_id", "tipo", "temporada", "episodio", "segundos_vistos", "completado", "fecha_visualizacion"],
+      properties: {
+        id: { bsonType: "string" },
+        usuario_id: { bsonType: "string" },
+        media_id: { bsonType: "string" },
+        tipo: { bsonType: "string" },
+        temporada: { bsonType: "number" },
+        episodio: { bsonType: "number" },
+        segundos_vistos: { bsonType: "number" },
+        completado: { bsonType: "bool" },
+        fecha_visualizacion: { bsonType: "date" }
+      }
+    }
+  }
+});
+```
+
+4- Valoraciones:
+```json
+db.createCollection("valoraciones", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["id", "media_id", "usuario_id", "nota", "estado", "fecha_creacion"],
+      properties: {
+        id: { bsonType: "string" },
+        media_id: { bsonType: "string" },
+        usuario_id: { bsonType: "string" },
+        nota: { bsonType: "number" },
+        estado: { bsonType: "string" },
+        fecha_creacion: { bsonType: "date" }
+      }
+    }
+  }
+});
+```
+
+### Prueba de rechazo
+```json
+db.media.insertOne({
+  "id_serie": "123456789",
+  "id_pelicula": "987654321",
+  "año": 2025,
+  "duracion": -100,
+  "nota_media": 8.7,
+  "sinopsis": "Un grupo de científicos descubre una anomalía gravitatoria.",
+  "generos": ["Ciencia Ficción", "Suspense"]
+});
+```
+
+Resultado: MongoDB bloquea la operación porque la duración es negativa.
+
+### 2. Creación de índices.
+
+```json
+db.media.createIndex(
+  { generos: 1, nota_media: -1, año: -1 },
+  { name: "idx_media_genero_nota_año" }
+);
+```
+```json
+db.media.createIndex(
+  { sinopsis: "text" },
+  { name: "idx_media_texto_sinopsis", default_language: "spanish" }
+);
+```
+```json
+db.valoraciones.createIndex(
+  { media_id: 1,fecha_creacion: -1},
+  { name: "idx_valoraciones_media_fecha" }
+);
+```
+
+### 3. Justificación de índices.
+
+1- idx_media_genero_nota_año: Índice de búsqueda por género, nota y año.
+Filtra por igualdad en genero y nota, los entrega ordenados por año.
+
+2- idx_media_texto_sinopsis: Índice de búsqueda por texto en la sinopsis.
+
+3- idx_valoraciones_media_fecha: Índice de búsqueda por media y fecha de creación.
+
+### 4. Evidencia de rendimiento.
+```json
+db.media.find({"generos": "Ciencia Ficción", "duracion": 120}).sort({"año": -1}).explain("executionStats")
+```
+
+## 4. Resolver consultas y agregación compleja.
+
+### 1. Operaciones CRUD.
+
+```json
+db.media.insertOne({
+  id_serie: "ser_003",
+  id_pelicula: null,
+  año: 2011
+  duracion: 300,
+  nota_media: 9.8,
+  sinopsis:"Lucha por el trono de hierro en Poniente.",
+  generos: ["ciencia ficcion", "aventura", "fantasia", "drama"]
+});
+
+
+db.media.updateOne(
+  {id_serie: "ser_003"}
+  {
+    $set: { duracion: 5000 }
+  }
+);
+
+db.media.deleteOne({
+  id_serie: "ser_003"
+})
+```
+
+### 2. Filtros combinados, ordenación y paginación.
+
+db.media.find({
+  {generos: "ciencia ficcion", duracion: "300"},
+  {nota_media: }
+})
