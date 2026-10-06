@@ -344,7 +344,72 @@ db.media.deleteOne({
 
 ### 2. Filtros combinados, ordenación y paginación.
 
-db.media.find({
-  {generos: "ciencia ficcion", duracion: "300"},
-  {nota_media: }
-})
+```json
+db.media.find(
+  {
+    generos: "Ciencia Ficción",
+    nota_media: { $gte: 8.0, $lte: 10.0 },
+    año: { $gte: 2010 }
+  },
+  {
+    _id: 1,
+    id_pelicula: 1,
+    id_serie: 1,
+    año: 1,
+    nota_media: 1,
+    generos: 1
+  }
+)
+.sort({ nota_media: -1, _id: 1 })
+.skip(0)
+.limit(2);
+```
+
+### 3. Consulta con referencia mediante $lookup.
+
+```json
+db.media.aggregate([
+  { $match: { id_pelicula: "pel_001" } },
+  {
+    $lookup: {
+      from:"valoraciones",
+      localField: "id_pelicula",
+      foreignField: "media_id",
+      as: "valoraciones"
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      id_pelicula: 1,
+      año: 1,
+      nota_media: 1,
+      generos: 1,
+      total_valoraciones: { $size: "$valoraciones" },
+      opiniones_usuarios: {
+        usuario_id: 1,
+        nota: 1,
+        fecha_creacion: 1
+      }
+    }
+  }
+]);
+```
+
+### 4. Agregación compleja de 4+ etapas con $facet.
+
+```json
+db.media.aggregate([
+  { $match: { id_pelicula: "pel_001" } },
+  { $unwind: "$valoraciones"},
+  {
+    $facet: {
+      media: [{
+        $group: {
+          id_pelicula: "$id_pelicula",
+        }
+      }]
+    }
+  }
+])
+```
