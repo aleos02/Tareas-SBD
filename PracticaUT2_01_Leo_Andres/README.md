@@ -322,7 +322,7 @@ db.media.find({"generos": "Ciencia Ficción", "duracion": 120}).sort({"año": -1
 db.media.insertOne({
   id_serie: "ser_003",
   id_pelicula: null,
-  año: 2011
+  año: 2011,
   duracion: 300,
   nota_media: 9.8,
   sinopsis:"Lucha por el trono de hierro en Poniente.",
@@ -400,16 +400,34 @@ db.media.aggregate([
 
 ```json
 db.media.aggregate([
-  { $match: { id_pelicula: "pel_001" } },
-  { $unwind: "$valoraciones"},
   {
-    $facet: {
-      media: [{
-        $group: {
-          id_pelicula: "$id_pelicula",
-        }
-      }]
+    $match: {
+      año: { $gte: 2000 },
+      duracion: { $gt: 0 }
+    }
+  },
+
+  {
+    $unwind: "$generos"
+  },
+
+  {
+    $group: {
+      _id: "$generos",
+      total_titulos: { $sum: 1 },
+      nota_promedio: { $avg: "$nota_media" },
+      duracion_acumulada_minutos: { $sum: "$duracion" }
+    }
+  },
+
+  {
+    $project: {
+      _id: 0,
+      genero: "$_id",
+      total_titulos: 1,
+      nota_promedio: { $round: ["$nota_promedio", 2] },
+      duracion_acumulada_minutos: 1
     }
   }
-])
+]);
 ```
