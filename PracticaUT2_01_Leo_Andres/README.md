@@ -431,3 +431,49 @@ db.media.aggregate([
   }
 ]);
 ```
+
+### 5. Explicación del resultado y como cambiaría el coste al aumentar los datos.
+
+1. Eficiencia de $facet / $group: En lugar de lanzar múltiples consultas y agrupaciones separadas a la base de datos (una para calcular promedios por género y otra para identificar los títulos destacados), el clúster procesa los documentos en memoria en un único recorrido por el conjunto de datos.
+
+2. Filtrado previo con índice: La etapa match inicial aprovecha el índice sobre { año: 1, duracion: 1 } para descartar títulos anteriores al año 2000 o sin metraje antes de que entren al desanidado $unwind. Esto evita multiplicar documentos innecesarios en memoria RAM y previene sobrepasar el límite estricto de 100 MB por etapa de agregación.
+
+3. Impacto del volumen y unwind: Al aumentar a millones de registros, cada película/serie con múltiples géneros multiplica las filas intermedias. Mantener un filtrado inicial muy selectivo y limitar el uso de $unwind a los campos estrictamente necesarios evita tener que forzar la escritura temporal en disco (allowDiskUse: true), manteniendo la latencia baja.
+
+
+## 5.  Copias de Seguridad, Seguridad y Límites.
+
+### 1. Procedimiento de Copia y Restauración con mongodump / mongorestore
+
+```json
+mongodump --uri="mongodb+srv://cluster0.kkqxxz5.mongodb.net/streaming_db" --username app_admin --gzip --out=./backup_streaming
+
+# Restauraión con reemplazo (--drop)
+mongorestore --uri="mongodb+srv://cluster0.kkqxxz5.mongodb.net/streaming_db" --username app_admin --gzip --drop --dir=./backup_streaming/streaming_db
+```
+
+### 2. Usuarios, roles y permisos mínimos (RBAC).
+
+1. Usuario de la Plataforma de Streaming (streaming_app): Permisos de lectura (read) sobre media, y de lectura/escritura (readWrite) únicamente sobre usuarios, historial y valoraciones dentro de streaming_db. Si el backend sufriera un ataque, el atacante no tendría privilegios para borrar colecciones maestras, crear índices ni gestionar otros usuarios del clúster.
+
+2. Usuario Administrador: Protegido con segundo factor de autenticación (2FA), privilegios de administración global (dbAdmin, userAdmin) y acceso limitado por lista blanca de direcciones IP corporativas.
+
+### 3. Datos a cifrar, anonimizar o excluir en pruebas.
+
+1. Cifrado: Conexiones protegidas con TLS 1.3 en tránsito y cifrado en reposo en los discos de MongoDB Atlas. Las contraseñas se almacenan previamente hasheadas con salt (bcrypt).
+
+2. Anonimización: Antes de pasar una copia a entornos de desarrollo o pruebas, los correos reales se ofuscan (usuario_1@test.local), los nombres se sustituyen por ficticios y las contraseñas se reemplazan por un valor estándar para cumplir el RGPD.
+
+### 4. Situaciones donde MongoDB no es la mejor opción.
+
+1. Recomendaciones Sociales y Grafos Profundos: Si la plataforma necesitase calcular "qué series vieron los amigos de tus amigos que además compartieron valoraciones contigo", Neo4j (base de datos orientada a grafos) es mucho más rápida y óptima que múltiples $lookup o $graphLookup anidados.
+
+2. Búsqueda Avanzada con Tolerancia a Errores (Fuzzy Search): Para un autocompletado en tiempo real en la barra de búsqueda que tolere faltas ortográficas graves en títulos y sinopsis de películas a gran escala, un motor dedicado como Elasticsearch u OpenSearch resulta superior a los índices $text de MongoDB.
+
+### 5. Política de retención y archivado histórico.
+
+1. Historial de visualización: Se mantiene activo en MongoDB durante 1 año para la sección "Seguir viendo". Pasado 1 año, se exporta en formato Parquet a un Data Lake en la nube (ej. AWS S3) para analítica y entrenamiento de modelos de recomendación.
+
+2. Valoraciones: Se conservan indefinidamente para mantener actualizado el cálculo de las notas medias de las películas y series del catálogo.
+
+3. Sesiones de reproducción temporales incompletas: Se eliminan automáticamente tras 30 días mediante un índice de caducidad (TTL Index) sobre el campo de fecha si la reproducción no superó los 60 segundos.
