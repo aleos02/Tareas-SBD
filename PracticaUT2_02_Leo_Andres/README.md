@@ -41,48 +41,32 @@ Disponibilidad: El clúster de Neo4j garantiza que el streaming no sufra interru
 
 ## 2. Diseñar el grafo de nodos y relaciones.
 
-Nodos:
-1. Usuarios.
-2. Artistas.
-3. Canciones
-4. Géneros
-5. Listas de reproducción
-6. Álbumes
-
-Relaciones:
-1. Usuarios -> Sigue -> Artistas. (Fecha de seguimiento)
-2. Usuarios -> Escucha -> Canciones (Número de veces escuchadas)
-3. Canciones -> Creada por -> Artistas (Fecha de creación)
-4. Canciones -> Pertenece a -> Géneros
-5. Listas de reproducción -> Creada por -> Usuarios
-6. Listas de reproducción -> Contiene -> Canciones
-7. Artistas -> Tiene -> Álbumes
-8. Usuarios -> Sigue a -> Usuarios (Fecha de seguimiento)
-
 ![Grafo](./Diagrama_nodos.png)
 
 
 ### 1. Etiquetas de nodos.
 
-Usuarios{
+Usuario{
     id_usuario,
     nombre,
     email,
 }
-Canciones{
+Cancion{
     id_cancion,
     titulo,
     artista,
     duracion,
     genero,
     album,
-    fecha_creacion
+    fecha_creacion,
+    reproducciones
 }
 Artistas{
     id_artista,
     nombre,
     canciones,
-    álbumes
+    álbumes,
+    oyentes
 }
 Géneros{
     id_genero,
@@ -112,8 +96,36 @@ Por ejemplo, una consulta de las recomendaciones de un usuario con respecto a la
 
 ### 4. Estrategia de identificadores únicos.
 
+Identificadores unívocos: Los identificadores de los nodos son únicos y legibles.
+
+Propiedades en las relaciones: Algunas relaciones tienen propiedades que evitan crear tablas y colecciones intermedias.
 
 
 ### 5. Límites y riesgos del modelo.
 
+Profundidad de saltos ilimitada: Ejecutar exploraciones abiertas sin especificar un límite de niveles.
 
+Búsquedas globales: Buscar patrones abstractos en el grafo sin un punto de partida concreto.
+
+## 3. Implementar restricciones, índices y carga de datos.
+
+### 1. Restricciones
+
+```json
+CREATE CONSTRAINT c_id_cancion IF NOT EXISTS
+FOR (c:Cancion) REQUIRE c.id_cancion IS UNIQUE;
+
+CREATE CONSTRAINT c_id_artista IF NOT EXISTS
+FOR (a:Artista) REQUIRE a.id_artista IS UNIQUE;
+
+CREATE CONSTRAINT c_id_genero IF NOT EXISTS
+FOR (g:Genero) REQUIRE g.id_genero IS UNIQUE;
+
+CREATE CONSTRAINT c_id_lista IF NOT EXISTS
+FOR (l:Lista) REQUIRE l.id_lista IS UNIQUE;
+
+CREATE CONSTRAINT c_id_album IF NOT EXISTS
+FOR (a:Album) REQUIRE a.id_album IS UNIQUE;
+```
+
+### 2.
