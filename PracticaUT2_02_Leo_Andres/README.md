@@ -45,7 +45,7 @@ Disponibilidad: El clúster de Neo4j garantiza que el streaming no sufra interru
 
 
 ### 1. Etiquetas de nodos.
-
+```js
 Usuario{
     id_usuario,
     nombre,
@@ -77,6 +77,7 @@ Album{
     titulo,
     lanzamiento
 }
+```
 
 ### 2. Relaciones de nodos
 
@@ -112,7 +113,7 @@ Búsquedas globales: Buscar patrones abstractos en el grafo sin un punto de part
 
 ### 1. Restricciones
 
-```json
+```js
 CREATE CONSTRAINT c_id_cancion IF NOT EXISTS
 FOR (c:Cancion) REQUIRE c.id_cancion IS UNIQUE;
 
@@ -131,25 +132,25 @@ FOR (a:Album) REQUIRE a.id_album IS UNIQUE;
 
 ### 2. Índices secundarios
 
-```json
+```js
 CREATE INDEX idx_cancion IF NOT EXISTS
-FOR (c:Cancion) ON (c.titulo)
+FOR (c:Cancion) ON (c.titulo);
 
 CREATE INDEX idx_artista IF NOT EXISTS
-FOR (a:Artista) ON (a.nombre)
+FOR (a:Artista) ON (a.nombre);
 
-CREATE INDEX idx_lista IF NOT EXISTS
-FOR (l:Lista de reproduccion) ON (l.nombre)
+CREATE INDEX idx_playlist IF NOT EXISTS
+FOR (p:Playlist) ON (p.nombre);
 ```
 
 ### 3. Carga de datos.
 
-```json
+```js
 // 1. Géneros Musicales
 MERGE (g1:Genero {id: "GEN-01"}) SET g1.nombre = "Indie Rock"
 MERGE (g2:Genero {id: "GEN-02"}) SET g2.nombre = "Dance Pop"
 MERGE (g3:Genero {id: "GEN-03"}) SET g3.nombre = "Synthwave"
-MERGE (g4:Genero {id: "GEN-04"}) SET g4.nombre = "Pop Rock";
+MERGE (g4:Genero {id: "GEN-04"}) SET g4.nombre = "Pop Rock"
 
 // 2. Artistas
 MERGE (a1:Artista {id: "ART-01"}) SET a1.nombre = "Coldplay", a1.oyentes_mensuales = 75000000, a1.pais_origen = "GB"
@@ -157,7 +158,7 @@ MERGE (a2:Artista {id: "ART-02"}) SET a2.nombre = "Dua Lipa", a2.oyentes_mensual
 MERGE (a3:Artista {id: "ART-03"}) SET a3.nombre = "Elton John", a3.oyentes_mensuales = 52000000, a3.pais_origen = "GB"
 MERGE (a4:Artista {id: "ART-04"}) SET a4.nombre = "Calvin Harris", a4.oyentes_mensuales = 64000000, a4.pais_origen = "GB"
 MERGE (a5:Artista {id: "ART-05"}) SET a5.nombre = "Gorillaz", a5.oyentes_mensuales = 26000000, a5.pais_origen = "GB"
-MERGE (a6:Artista {id: "ART-06"}) SET a6.nombre = "Tame Impala", a6.oyentes_mensuales = 31000000, a6.pais_origen = "AU";
+MERGE (a6:Artista {id: "ART-06"}) SET a6.nombre = "Tame Impala", a6.oyentes_mensuales = 31000000, a6.pais_origen = "AU"
 
 // 3. Canciones
 MERGE (c1:Cancion {id: "CAN-01"}) SET c1.titulo = "Yellow", c1.duracion_seg = 269, c1.lanzamiento = 2000
@@ -167,7 +168,7 @@ MERGE (c4:Cancion {id: "CAN-04"}) SET c4.titulo = "One Kiss", c4.duracion_seg = 
 MERGE (c5:Cancion {id: "CAN-05"}) SET c5.titulo = "New Gold", c5.duracion_seg = 215, c5.lanzamiento = 2022
 MERGE (c6:Cancion {id: "CAN-06"}) SET c6.titulo = "The Less I Know The Better", c6.duracion_seg = 216, c6.lanzamiento = 2015
 MERGE (c7:Cancion {id: "CAN-07"}) SET c7.titulo = "Feel Good Inc", c7.duracion_seg = 221, c7.lanzamiento = 2005
-MERGE (c8:Cancion {id: "CAN-08"}) SET c8.titulo = "Miracle", c8.duracion_seg = 186, c8.lanzamiento = 2023;
+MERGE (c8:Cancion {id: "CAN-08"}) SET c8.titulo = "Miracle", c8.duracion_seg = 186, c8.lanzamiento = 2023
 
 // 4. Asignar Canciones a Géneros
 MERGE (c1)-[:PERTENECE_A]->(g4)
@@ -177,47 +178,32 @@ MERGE (c4)-[:PERTENECE_A]->(g2)
 MERGE (c5)-[:PERTENECE_A]->(g3)
 MERGE (c6)-[:PERTENECE_A]->(g1)
 MERGE (c7)-[:PERTENECE_A]->(g1)
-MERGE (c8)-[:PERTENECE_A]->(g3);
+MERGE (c8)-[:PERTENECE_A]->(g3)
 
 // 5. Interpretaciones y Colaboraciones Musicales
-// Tema en solitario Coldplay
 MERGE (a1)-[:INTERPRETA {rol: "principal"}]->(c1)
-
-// Colaboración: Elton John y Dua Lipa
 MERGE (a3)-[:INTERPRETA {rol: "principal"}]->(c2)
 MERGE (a2)-[:INTERPRETA {rol: "colaborador"}]->(c2)
-
-// Tema en solitario Dua Lipa
 MERGE (a2)-[:INTERPRETA {rol: "principal"}]->(c3)
-
-// Colaboración: Calvin Harris y Dua Lipa
 MERGE (a4)-[:INTERPRETA {rol: "productor"}]->(c4)
 MERGE (a2)-[:INTERPRETA {rol: "principal"}]->(c4)
-
-// Colaboración: Gorillaz y Tame Impala
 MERGE (a5)-[:INTERPRETA {rol: "principal"}]->(c5)
 MERGE (a6)-[:INTERPRETA {rol: "colaborador"}]->(c5)
-
-// Tema en solitario Tame Impala
 MERGE (a6)-[:INTERPRETA {rol: "principal"}]->(c6)
-
-// Tema en solitario Gorillaz
 MERGE (a5)-[:INTERPRETA {rol: "principal"}]->(c7)
-
-// Tema en solitario Calvin Harris
-MERGE (a4)-[:INTERPRETA {rol: "productor"}]->(c8);
+MERGE (a4)-[:INTERPRETA {rol: "productor"}]->(c8)
 
 // 6. Usuarios
 MERGE (u1:Usuario {id: "USR-01"}) SET u1.nombre = "Sara", u1.pais = "ES", u1.cuenta_premium = true
 MERGE (u2:Usuario {id: "USR-02"}) SET u2.nombre = "Mateo", u2.pais = "AR", u2.cuenta_premium = true
 MERGE (u3:Usuario {id: "USR-03"}) SET u3.nombre = "Valeria", u3.pais = "CO", u3.cuenta_premium = false
-MERGE (u4:Usuario {id: "USR-04"}) SET u4.nombre = "Javier", u4.pais = "ES", u4.cuenta_premium = false;
+MERGE (u4:Usuario {id: "USR-04"}) SET u4.nombre = "Javier", u4.pais = "ES", u4.cuenta_premium = false
 
 // 7. Red Social de Seguimiento entre Usuarios
 MERGE (u1)-[:SIGUE_A {desde: "2024-01-12"}]->(u2)
 MERGE (u1)-[:SIGUE_A {desde: "2024-02-18"}]->(u3)
 MERGE (u2)-[:SIGUE_A {desde: "2024-03-05"}]->(u4)
-MERGE (u3)-[:SIGUE_A {desde: "2024-03-22"}]->(u1);
+MERGE (u3)-[:SIGUE_A {desde: "2024-03-22"}]->(u1)
 
 // 8. Hábitos de Escucha y Favoritos
 MERGE (u1)-[:ESCUCHA {reproducciones: 48, favorito: true}]->(c3)
@@ -227,7 +213,7 @@ MERGE (u2)-[:ESCUCHA {reproducciones: 58, favorito: true}]->(c4)
 MERGE (u2)-[:ESCUCHA {reproducciones: 40, favorito: false}]->(c8)
 MERGE (u3)-[:ESCUCHA {reproducciones: 88, favorito: true}]->(c5)
 MERGE (u3)-[:ESCUCHA {reproducciones: 94, favorito: true}]->(c6)
-MERGE (u4)-[:ESCUCHA {reproducciones: 62, favorito: true}]->(c7);
+MERGE (u4)-[:ESCUCHA {reproducciones: 62, favorito: true}]->(c7)
 
 // 9. Playlists
 MERGE (p1:Playlist {id: "PLY-01"}) SET p1.nombre = "Indie & Dance Anthems", p1.es_publica = true
@@ -238,7 +224,7 @@ MERGE (p1)-[:CONTIENE_PISTA {orden: 4}]->(c5);
 ```
 
 ### 4. Evidencia con PROFILE
-```json
+```js
 PROFILE
 MATCH (a:Artista {nombre: "Coldplay"})
 RETURN a.oyentes_mensuales, a.pais_origen;
@@ -247,15 +233,112 @@ RETURN a.oyentes_mensuales, a.pais_origen;
 ## 4. Resolver consultas Cypher.
 
 ### 1. Operación básica.
-```json
+```js
 MERGE (a:Artista {id:"ART-01"}) SET a.oyentes_mensuales = 85000000;
 ```
 
 ### 2. Consulta de 1 salto.
-```json
-MATCH (c:Cancion {nombre: "Levitating"})-[r:CREADA_POR]->(a.Artista)
-OPTIONAL MATCH (a)-[:TIENE]->(al:Album)
-RETURN a.nombre AS artista,
-al.titulo AS album,
-al.lanzamiento AS lanzamiento,
-c.titulo AS cancion,
+```js
+MATCH (a:Artista)-[r:INTERPRETA]->(c:Cancion {titulo: "Levitating"})
+OPTIONAL MATCH (c)-[:PERTENECE_A]->(g:Genero)
+RETURN c.titulo AS cancion,
+       a.nombre AS artista,
+       r.rol AS rol_artista,
+       c.duracion_seg AS duracion_segundos,
+       c.lanzamiento AS anio_lanzamiento,
+       collect(DISTINCT g.nombre) AS generos;
+```
+
+### 3. Consulta de 2 saltos o más.
+Descubrimiento de nuevos artistas a través de la afinidad de género.
+```js
+MATCH (yo:Usuario {nombre: "Sara"})-[:SIGUE_A]->(amigo:Usuario)-[e:ESCUCHA]->(c:Cancion)
+WHERE NOT (yo)-[:ESCUCHA]->(c)
+RETURN c.titulo AS cancion_recomendada,
+       collect(DISTINCT amigo.nombre) AS amigos_que_la_escuchan,
+       count(DISTINCT amigo) AS total_amigos,
+       sum(e.reproducciones) AS total_escuchas_circulo
+ORDER BY total_amigos DESC, total_escuchas_circulo DESC;
+```
+
+### 4. Recomendación por afinidad.
+```js
+MATCH (inicio:Artista {nombre: "Dua Lipa"})-[:INTERPRETA]->(c:Cancion)<-[:INTERPRETA]-(colaborador:Artista)
+WHERE inicio <> colaborador
+RETURN colaborador.nombre AS artista_colaborador,
+       collect(c.titulo) AS canciones_en_comun,
+       count(c) AS total_colaboraciones
+ORDER BY total_colaboraciones DESC;
+```
+
+### 5. Camino más corto.
+```js
+MATCH (origen:Artista {nombre: "Elton John"})
+MATCH (destino:Artista {nombre: "Calvin Harris"})
+MATCH camino = shortestPath((origen)-[:INTERPRETA*..10]-(destino))
+RETURN camino,
+       length(camino) AS saltos_totales,
+       [n IN nodes(camino) | coalesce(n.nombre, n.titulo)] AS cadena_conexion;
+```
+
+### 6. Justificación teórica sobre Neo4j.
+Para encadenar dos relaciones o más en SQL, el motor debe recurrir a múltiples operaciones JOIN, donde el coste se incrementa por cada JOIN, sin embargo en Neo4j se utiliza adyacencia libre de índices, es decir, las relaciones se almacenan como punteros directos de memoria en cada nodo. 
+El motor solo usaría un índice, al principio de la consulta.
+
+## 5. Comparación técnica, seguridad y copias.
+
+### 1. Comparativa técnica.
+Consulta de recomendación de canciones en Neo4j:
+```js
+MATCH (yo:Usuario {nombre: "Sara"})-[:SIGUE_A]->(amigo:Usuario)-[e:ESCUCHA]->(c:Cancion)
+WHERE NOT (yo)-[:ESCUCHA]->(c)
+RETURN c.titulo AS cancion, count(DISTINCT amigo) AS amigos, sum(e.reproducciones) AS total_escuchas
+ORDER BY amigos DESC, total_escuchas DESC;
+```
+
+En SQL sería así:
+```js
+SELECT 
+    c.titulo AS cancion,
+    COUNT(DISTINCT s.id_amigo) AS amigos,
+    SUM(r.reproducciones) AS total_escuchas
+FROM usuarios u
+INNER JOIN seguimiento_usuarios s ON u.id_usuario = s.id_usuario_seguidor
+INNER JOIN reproducciones r ON s.id_amigo = r.id_usuario
+INNER JOIN canciones c ON r.id_cancion = c.id_cancion
+WHERE u.nombre = 'Sara'
+  AND NOT EXISTS (
+      SELECT 1 
+      FROM reproducciones r2 
+      WHERE r2.id_usuario = u.id_usuario 
+        AND r2.id_cancion = c.id_cancion
+  )
+GROUP BY c.id_cancion, c.titulo
+ORDER BY amigos DESC, total_escuchas DESC;
+```
+
+### 2. Copias de seguridad.
+```js
+// Realizar una copia física completa
+neo4j-admin database dump neo4j --to-path=/backups/spotify/
+
+// Restaurar la base de datos a partir del archivo dump
+neo4j-admin database load neo4j --from-path=/backups/spotify/ --overwrite-destination=true
+```
+
+### 3. Usuarios, seguridad y permisos.
+```js
+// Usuario para la API de la aplicación móvil (solo lectura / consultas del grafo)
+CREATE USER app_spotify SET PASSWORD 'AppSpotifyPass_2026!' CHANGE NOT REQUIRED;
+GRANT ROLE reader TO app_spotify;
+
+// Usuario administrador para el DBA o mantenimiento de la plataforma
+
+CREATE USER admin_spotify SET PASSWORD 'AdminSpotifyPass_2026!' CHANGE NOT REQUIRED;
+GRANT ROLE admin TO admin_spotify;
+```
+
+### 4. Cuando no usar Neo4j.
+1. Gestión transaccional de pagos y cobro de suscripciones (OLTP Financiero): Para procesar cobros recurrentes de cuentas Premium, facturación con impuestos por país y conciliación contable sin recorrer caminos complejos, una base de datos relacional tradicional (PostgreSQL, MySQL) garantiza integridad ACID estricta, bloqueos de concurrencia y cumplimiento normativo de forma nativa.
+
+2. Búsqueda difusa de catálogo y autocompletado en la app: Para resolver búsquedas en la barra de la aplicación con errores tipográficos (fuzzy search como "dua lypa"), autocompletado instantáneo por prefijo y relevancia léxica, un motor de búsqueda basado en índices invertidos (Elasticsearch, Meilisearch) es órdenes de magnitud más rápido y eficiente que un motor de grafos.
